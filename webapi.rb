@@ -99,12 +99,30 @@ end
 #   status 201
 # end
 
+# #curl must be in the format of 
+# #curl -X POST http://localhost:4567/veganveg -d '{                                                                                                                   
+#   "name": "Chills",
+#   "country": "hey",
+#   "taste": "eh",
+#   "meal": "brek",
+#   "vegetarian_or_vegan": 1,
+#   "cuisines_id": 12  
+# }'
 post '/veganveg' do
-  ingredient = JSON.parse(request.body.read)
-  # ingredient = params[:ingredient]
-  ingredients[ingredient['name'].downcase.to_sym] = ingredient
+  db = SQLite3::Database.open 'foodndishes.db'
 
-  url = "http://localhost:4567/users/#{ingredient['name']}"
-  response.headers['Location'] = url   
-  status 201
+  json_params = JSON.parse(request.body.read)
+
+  name = json_params["name"]
+  country = json_params["country"]
+  taste = json_params["taste"]
+  meal = json_params["meal"]
+  vegetarian_or_vegan = json_params["vegetarian_or_vegan"]
+  cuisines_id = json_params["cuisines_id"]
+
+  insert_stm = db.prepare("INSERT INTO dishes (name, country, taste, meal, vegetarian_or_vegan, cuisines_id) VALUES (?, ?, ?, ?, ?, ?)")
+  insert_stm.execute(name, country, taste, meal, vegetarian_or_vegan, cuisines_id)
+  insert_stm.close
+
+  db.close
 end
