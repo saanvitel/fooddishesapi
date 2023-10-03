@@ -29,6 +29,9 @@ def make_query(query, *params)
     []
 end 
 
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#GET METHODS
+#------------------------------------------------------------------------------------------------------------------------------------------------
 # introductory part of website
 get '/' do
   'This is sinatra web api response 😎'
@@ -90,17 +93,12 @@ get '/dish/:name' do
   return result.to_json
 end
 
-# post '/disheswith/:ingredient' do
-#   ingredient = JSON.parse(request.body.read)
-#   ingredients[ingredient['name'].downcase.to_sym] = ingredient
-
-#   url = "http://localhost:4567/users/#{ingredient['name']}"
-#   response.headers['Location'] = url   
-#   status 201
-# end
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#POST METHOD
+#------------------------------------------------------------------------------------------------------------------------------------------------
 
 # #curl must be in the format of 
-# #curl -X POST http://localhost:4567/veganveg -d '{                                                                                                                   
+# #curl -X POST http://localhost:4567/dishes -d '{                                                                                                                   
 #   "name": "Chills",
 #   "country": "hey",
 #   "taste": "eh",
@@ -108,7 +106,7 @@ end
 #   "vegetarian_or_vegan": 1,
 #   "cuisines_id": 12  
 # }'
-post '/veganveg' do
+post '/dishes' do
   db = SQLite3::Database.open 'foodndishes.db'
 
   json_params = JSON.parse(request.body.read)
@@ -126,3 +124,42 @@ post '/veganveg' do
 
   db.close
 end
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#PUT METHOD
+#------------------------------------------------------------------------------------------------------------------------------------------------
+
+# curl -X PUT http://localhost:4567/dishes/40 -d '{
+#   "name": "Chuiugygiills",
+#   "country": "hey",
+#   "taste": "eh",
+#   "meal": "brek",
+#   "vegetarian_or_vegan": 1,
+#   "cuisines_id": 12
+# }'
+put '/dishes/:id' do
+  db = SQLite3::Database.open 'foodndishes.db'
+
+  id = params[:id]
+  request_body = JSON.parse(request.body.read)
+
+  name = request_body['name']
+  country = request_body['country']
+  taste = request_body['taste']
+  meal = request_body['meal']
+  vegetarian_or_vegan = request_body['vegetarian_or_vegan']
+  cuisines_id = request_body['cuisines_id']
+
+  db.execute(
+    'UPDATE dishes SET name = ?, country = ?, taste = ?, meal = ?, vegetarian_or_vegan = ?, cuisines_id = ? WHERE dishes_id = ?',
+    name, country, taste, meal, vegetarian_or_vegan, cuisines_id, id
+  )
+
+  status 200
+  db.close
+end 
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#PATCH METHOD
+#------------------------------------------------------------------------------------------------------------------------------------------------
+
