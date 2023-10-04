@@ -109,14 +109,14 @@ end
 post '/dishes' do
   db = SQLite3::Database.open 'foodndishes.db'
 
-  json_params = JSON.parse(request.body.read)
+  request_body = JSON.parse(request.body.read)
 
-  name = json_params["name"]
-  country = json_params["country"]
-  taste = json_params["taste"]
-  meal = json_params["meal"]
-  vegetarian_or_vegan = json_params["vegetarian_or_vegan"]
-  cuisines_id = json_params["cuisines_id"]
+  name = request_body["name"]
+  country = request_body["country"]
+  taste = request_body["taste"]
+  meal = request_body["meal"]
+  vegetarian_or_vegan = request_body["vegetarian_or_vegan"]
+  cuisines_id = request_body["cuisines_id"]
 
   insert_stm = db.prepare("INSERT INTO dishes (name, country, taste, meal, vegetarian_or_vegan, cuisines_id) VALUES (?, ?, ?, ?, ?, ?)")
   insert_stm.execute(name, country, taste, meal, vegetarian_or_vegan, cuisines_id)
@@ -163,3 +163,56 @@ end
 #PATCH METHOD
 #------------------------------------------------------------------------------------------------------------------------------------------------
 
+patch '/dishes/:id' do
+  db = SQLite3::Database.open 'foodndishes.db'
+
+  id = params[:id]
+  request_body = JSON.parse(request.body.read)
+
+  name = request_body['name']
+  country = request_body['country']
+  taste = request_body['taste']
+  meal = request_body['meal']
+  vegetarian_or_vegan = request_body['vegetarian_or_vegan']
+  cuisines_id = request_body['cuisines_id']
+
+  update_sql = []
+  values = []
+
+  if name
+    update_sql << 'name = ?'
+    values << name
+  end
+
+  if country
+    update_sql << 'country = ?'
+    values << country
+  end
+
+  if taste
+    update_sql << 'taste = ?'
+    values << taste
+  end
+
+  if meal
+    update_sql << 'meal = ?'
+    values << meal
+  end
+
+  if vegetarian_or_vegan
+    update_sql << 'vegetarian_or_vegan = ?'
+    values << vegetarian_or_vegan
+  end
+
+  if cuisines_id
+    update_sql << 'cuisines_id = ?'
+    values << cuisines_id
+  end
+
+  if !update_sql.empty?
+    update_sql_str = update_sql.join(', ')
+    db.execute("UPDATE dishes SET #{update_sql_str} WHERE dishes_id = ?", values + [id])
+  end
+
+  status 200
+end
