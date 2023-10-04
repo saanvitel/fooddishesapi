@@ -163,6 +163,13 @@ end
 #PATCH METHOD
 #------------------------------------------------------------------------------------------------------------------------------------------------
 
+def build_update_sql_and_values(update_sql, values, field_name, field_value)
+  if field_value
+    update_sql << "#{field_name} = ?"
+    values << field_value
+  end
+end
+
 patch '/dishes/:id' do
   db = SQLite3::Database.open 'foodndishes.db'
 
@@ -179,35 +186,18 @@ patch '/dishes/:id' do
   update_sql = []
   values = []
 
-  if name
-    update_sql << 'name = ?'
-    values << name
-  end
+  field_names = ['name', 'country', 'taste', 'meal', 'vegetarian_or_vegan', 'cuisines_id']
 
-  if country
-    update_sql << 'country = ?'
-    values << country
-  end
+  # field_names.each { |fieldname| 
+  #   build_update_sql_and_values(update_sql, values, "#{fieldname}", fieldname)
+  #   }
 
-  if taste
-    update_sql << 'taste = ?'
-    values << taste
-  end
-
-  if meal
-    update_sql << 'meal = ?'
-    values << meal
-  end
-
-  if vegetarian_or_vegan
-    update_sql << 'vegetarian_or_vegan = ?'
-    values << vegetarian_or_vegan
-  end
-
-  if cuisines_id
-    update_sql << 'cuisines_id = ?'
-    values << cuisines_id
-  end
+  build_update_sql_and_values(update_sql, values, 'name', name)
+  build_update_sql_and_values(update_sql, values, 'country', country)
+  build_update_sql_and_values(update_sql, values, 'taste', taste)
+  build_update_sql_and_values(update_sql, values, 'meal', meal)
+  build_update_sql_and_values(update_sql, values, 'vegetarian_or_vegan', vegetarian_or_vegan)
+  build_update_sql_and_values(update_sql, values, 'cuisines_id', cuisines_id)
 
   if !update_sql.empty?
     update_sql_str = update_sql.join(', ')
@@ -215,4 +205,19 @@ patch '/dishes/:id' do
   end
 
   status 200
+  db.close
 end
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#DELETE METHOD
+#------------------------------------------------------------------------------------------------------------------------------------------------
+
+delete '/dishes/:id' do
+  db = SQLite3::Database.open 'foodndishes.db'
+  id = params[:id]
+
+  db.execute("DELETE FROM dishes WHERE dishes_id = ?;", id)
+
+  status 204
+  db.close
+end 
