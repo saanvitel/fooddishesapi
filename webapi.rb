@@ -86,7 +86,7 @@ get '/veganveg' do
 end
 
 #will fetch dishes based on it being dishes name
-get '/dish/:name' do
+get '/dishes/:name' do
   name = params[:name].capitalize()
   name ||= name.split.map(&:capitalize).join(' ')
   result = make_query("SELECT * FROM dishes WHERE name = '#{name}';")
@@ -96,19 +96,97 @@ end
 #------------------------------------------------------------------------------------------------------------------------------------------------
 #POST METHOD
 #------------------------------------------------------------------------------------------------------------------------------------------------
-
-# #curl must be in the format of 
-# #curl -X POST http://localhost:4567/dishes -d '{                                                                                                                   
-#   "name": "Chills",
-#   "country": "hey",
-#   "taste": "eh",
-#   "meal": "brek",
-#   "vegetarian_or_vegan": 1,
-#   "cuisines_id": 12  
-# }'
+# #curl -X POST http://localhost:4567/dishes -d '{--hashvals--}'
 post '/dishes' do
   db = SQLite3::Database.open 'foodndishes.db'
 
+  request_body = JSON.parse(request.body.read)
+
+  begin
+    name = request_body.fetch('name')
+    country = request_body.fetch('country')
+    taste = request_body.fetch('taste')
+    meal = request_body.fetch('meal')
+    vegetarian_or_vegan = request_body.fetch('vegetarian_or_vegan')
+    cuisines_id = request_body.fetch('cuisines_id')
+
+    if !name.is_a?(String) || !country.is_a?(String) || !taste.is_a?(String) || !meal.is_a?(String) || !vegetarian_or_vegan.is_a?(Integer) || !cuisines_id.is_a?(Integer) 
+      raise TypeError
+    end
+
+  insert_stm = db.prepare("INSERT INTO dishes (name, country, taste, meal, vegetarian_or_vegan, cuisines_id) VALUES (?, ?, ?, ?, ?, ?)")
+  insert_stm.execute(name, country, taste, meal, vegetarian_or_vegan, cuisines_id)
+  insert_stm.close
+
+  status 201
+  db.close
+  rescue KeyError
+    p "The user did not provide inputs for all fields"
+    status 400
+    "invalid input"
+  rescue TypeError
+    p "User provided invalid input"
+    status 400
+    "invalid input!!"
+  end 
+end
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#PUT METHOD
+#------------------------------------------------------------------------------------------------------------------------------------------------
+# curl -X PUT http://localhost:4567/dishes/40 -d '{--hashvals--}'
+put '/dishes/:id' do
+  db = SQLite3::Database.open 'foodndishes.db'
+
+  id = params[:id]
+  request_body = JSON.parse(request.body.read)
+
+  begin
+    name = request_body.fetch('name')
+    country = request_body.fetch('country')
+    taste = request_body.fetch('taste')
+    meal = request_body.fetch('meal')
+    vegetarian_or_vegan = request_body.fetch('vegetarian_or_vegan')
+    cuisines_id = request_body.fetch('cuisines_id')
+    
+    if !name.is_a?(String) || !country.is_a?(String) || !taste.is_a?(String) || !meal.is_a?(String) || !vegetarian_or_vegan.is_a?(Integer) || !cuisines_id.is_a?(Integer) 
+      raise TypeError
+    end
+
+    db.execute(
+    'UPDATE dishes SET name = ?, country = ?, taste = ?, meal = ?, vegetarian_or_vegan = ?, cuisines_id = ? WHERE dishes_id = ?',
+    name, country, taste, meal, vegetarian_or_vegan, cuisines_id, id
+    )
+
+  status 200
+  db.close
+  rescue KeyError
+    p "The user did not provide inputs for all fields"
+    status 400
+    "invalid input"
+  rescue TypeError
+    p "User provided invalid input"
+    status 400
+    "invalid input!!"
+  end 
+end 
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#PATCH METHOD
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#curl -X PATCH http://localhost:4567/dishes/47 -d
+def build_update_sql_and_values(update_sql, values, field_name, field_value)
+  if field_value
+    update_sql << "#{field_name} = ?"
+    values << field_value
+  end
+end
+
+patch '/dishes/:id' do
+  begin 
+  db = SQLite3::Database.open 'foodndishes.db'
+
+  id = params[:id]
   request_body = JSON.parse(request.body.read)
 
   name = request_body["name"]
@@ -118,86 +196,14 @@ post '/dishes' do
   vegetarian_or_vegan = request_body["vegetarian_or_vegan"]
   cuisines_id = request_body["cuisines_id"]
 
-  insert_stm = db.prepare("INSERT INTO dishes (name, country, taste, meal, vegetarian_or_vegan, cuisines_id) VALUES (?, ?, ?, ?, ?, ?)")
-  insert_stm.execute(name, country, taste, meal, vegetarian_or_vegan, cuisines_id)
-  insert_stm.close
-
-  db.close
-end
-
-#------------------------------------------------------------------------------------------------------------------------------------------------
-#PUT METHOD
-#------------------------------------------------------------------------------------------------------------------------------------------------
-
-# curl -X PUT http://localhost:4567/dishes/40 -d '{
-#   "name": "Chuiugygiills",
-#   "country": "hey",
-#   "taste": "eh",
-#   "meal": "brek",
-#   "vegetarian_or_vegan": 1,
-#   "cuisines_id": 12
-# }'
-put '/dishes/:id' do
-  db = SQLite3::Database.open 'foodndishes.db'
-
-  id = params[:id]
-  request_body = JSON.parse(request.body.read)
-
-  name = request_body['name']
-  country = request_body['country']
-  taste = request_body['taste']
-  meal = request_body['meal']
-  vegetarian_or_vegan = request_body['vegetarian_or_vegan']
-  cuisines_id = request_body['cuisines_id']
-
-  db.execute(
-    'UPDATE dishes SET name = ?, country = ?, taste = ?, meal = ?, vegetarian_or_vegan = ?, cuisines_id = ? WHERE dishes_id = ?',
-    name, country, taste, meal, vegetarian_or_vegan, cuisines_id, id
-  )
-
-  status 200
-  db.close
-end 
-
-#------------------------------------------------------------------------------------------------------------------------------------------------
-#PATCH METHOD
-#------------------------------------------------------------------------------------------------------------------------------------------------
-
-def build_update_sql_and_values(update_sql, values, field_name, field_value)
-  if field_value
-    update_sql << "#{field_name} = ?"
-    values << field_value
-  end
-end
-
-patch '/dishes/:id' do
-  db = SQLite3::Database.open 'foodndishes.db'
-
-  id = params[:id]
-  request_body = JSON.parse(request.body.read)
-
-  name = request_body['name']
-  country = request_body['country']
-  taste = request_body['taste']
-  meal = request_body['meal']
-  vegetarian_or_vegan = request_body['vegetarian_or_vegan']
-  cuisines_id = request_body['cuisines_id']
-
   update_sql = []
   values = []
 
   field_names = ['name', 'country', 'taste', 'meal', 'vegetarian_or_vegan', 'cuisines_id']
 
-  # field_names.each { |fieldname| 
-  #   build_update_sql_and_values(update_sql, values, "#{fieldname}", fieldname)
-  #   }
-
-  build_update_sql_and_values(update_sql, values, 'name', name)
-  build_update_sql_and_values(update_sql, values, 'country', country)
-  build_update_sql_and_values(update_sql, values, 'taste', taste)
-  build_update_sql_and_values(update_sql, values, 'meal', meal)
-  build_update_sql_and_values(update_sql, values, 'vegetarian_or_vegan', vegetarian_or_vegan)
-  build_update_sql_and_values(update_sql, values, 'cuisines_id', cuisines_id)
+  field_names.each do |fieldname|
+      build_update_sql_and_values(update_sql, values, fieldname, request_body[fieldname])
+    end
 
   if !update_sql.empty?
     update_sql_str = update_sql.join(', ')
@@ -205,19 +211,35 @@ patch '/dishes/:id' do
   end
 
   status 200
-  db.close
+  rescue JSON::ParserError => e
+    status 400 # Bad Request
+    body "JSON parsing error: #{e.message}"
+  rescue SQLite3::Exception => e
+    status 500 # Internal Server Error
+    body "Database error: #{e.message}"
+  ensure
+    db.close if db
+  end
 end
 
 #------------------------------------------------------------------------------------------------------------------------------------------------
 #DELETE METHOD
 #------------------------------------------------------------------------------------------------------------------------------------------------
-
+#curl -X DELETE -v http://localhost:4567/dishes/47 
 delete '/dishes/:id' do
-  db = SQLite3::Database.open 'foodndishes.db'
-  id = params[:id]
+  begin 
+    db = SQLite3::Database.open 'foodndishes.db'
+    id = params[:id]
 
-  db.execute("DELETE FROM dishes WHERE dishes_id = ?;", id)
+    db.execute("DELETE FROM dishes WHERE dishes_id = ?;", id)
 
-  status 204
-  db.close
+    status 204
+
+  rescue SQLite3::Exception => e
+    status 500 # Internal Server Error
+    body "An error occurred: #{e.message}" # Return the error message as the response body
+
+  ensure
+    db.close
+  end
 end 
