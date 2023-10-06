@@ -15,7 +15,7 @@ def make_query(query, *params)
     stm.bind_param(index + 1, param)
   end
 
-  result_set = stm.execute(query)
+  result_set = stm.execute
 
   while (row = result_set.next) do
       array.push(row)
@@ -40,7 +40,7 @@ end
 #search
 get '/search/:ingredient' do
   ingredient = params[:ingredient]
-  ingredient ||= ingredient.split.map(&:capitalize).join(' ')
+  ingredient = ingredient.split.map(&:capitalize).join(' ')
   result = make_query("SELECT * FROM dishes AS d JOIN ingredients_in_dish USING(dishes_id) JOIN ingredients AS i USING(ingredients_id) WHERE i.name =?;", ingredient)
   return result.to_json
 end 
@@ -48,7 +48,7 @@ end
 #will fetch dishes based on ingredients 
 get '/disheswith/:ingredient' do
   ingredient = params[:ingredient].capitalize()
-  ingredient ||= ingredient.split.map(&:capitalize).join(' ')
+  ingredient = ingredient.split.map(&:capitalize).join(' ')
   result = make_query("SELECT d.name FROM dishes AS d JOIN ingredients_in_dish USING(dishes_id) JOIN ingredients AS i USING(ingredients_id) WHERE i.name =?;", ingredient)
   return result.to_json
 end
@@ -56,7 +56,7 @@ end
 #will fetch dishes based on cuisine 
 get '/dishesin/:cuisine' do
   cuisine = params[:cuisine]
-  cuisine ||= cuisine.split.map(&:capitalize).join(' ')
+  cuisine = cuisine.split.map(&:capitalize).join(' ')
   result = make_query("SELECT * FROM dishes AS d JOIN cuisines AS c USING(cuisines_id) WHERE c.name =?;", cuisine)
   return result.to_json
 end
@@ -88,7 +88,7 @@ end
 #will fetch dishes based on it being dishes name
 get '/dishes/:name' do
   name = params[:name].capitalize()
-  name ||= name.split.map(&:capitalize).join(' ')
+  name = name.split.map(&:capitalize).join(' ')
   result = make_query("SELECT * FROM dishes WHERE name = '#{name}';")
   return result.to_json
 end
