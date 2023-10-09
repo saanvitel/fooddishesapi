@@ -99,9 +99,10 @@ end
 # #curl -X POST http://localhost:4567/dishes -d '{--hashvals--}'
 post '/dishes' do
   db = SQLite3::Database.open 'foodndishes.db'
-
-  request_body = JSON.parse(request.body.read)
-
+  hey = request.body.read
+  pp "anything 1", hey
+  request_body = JSON.parse(hey)
+  p "anything 2"
   begin
     name = request_body.fetch('name')
     country = request_body.fetch('country')
@@ -109,14 +110,17 @@ post '/dishes' do
     meal = request_body.fetch('meal')
     vegetarian_or_vegan = request_body.fetch('vegetarian_or_vegan')
     cuisines_id = request_body.fetch('cuisines_id')
+    p "anything 3"
 
     if !name.is_a?(String) || !country.is_a?(String) || !taste.is_a?(String) || !meal.is_a?(String) || !vegetarian_or_vegan.is_a?(Integer) || !cuisines_id.is_a?(Integer) 
       raise TypeError
     end
+    p "anything 4"
 
   insert_stm = db.prepare("INSERT INTO dishes (name, country, taste, meal, vegetarian_or_vegan, cuisines_id) VALUES (?, ?, ?, ?, ?, ?)")
   insert_stm.execute(name, country, taste, meal, vegetarian_or_vegan, cuisines_id)
   insert_stm.close
+  p "anything 5"
 
   status 201
   db.close
