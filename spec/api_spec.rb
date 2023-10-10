@@ -1,3 +1,5 @@
+#testing by using this command rspec -fd foodndishesapi/spec/api_spec.rb
+
 require_relative '../lib/webapi'
 require 'rspec'
 require 'rack/test'
